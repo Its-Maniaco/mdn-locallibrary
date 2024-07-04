@@ -10,8 +10,8 @@ require('dotenv').config();
 // These modules/files contain code for handling particular sets of related "routes" (URL paths).
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
-
-const app = express();
+const catalogRouter = require('./routes/catalog');
+const wiki = require("./routes/wiki");
 
 // Set up mongoose connection
 const mongoose = require("mongoose");
@@ -23,6 +23,7 @@ async function main() {
   await mongoose.connect(mongoDB);
 }
 
+const app = express();
 // view engine setup
 // specify the folder where the templates will be stored
 app.set('views', path.join(__dirname, 'views'));
@@ -34,8 +35,13 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// require route module
+
+
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+app.use('/wiki', wiki); 
+app.use('/catalog', catalogRouter); // added to middleware chain
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
