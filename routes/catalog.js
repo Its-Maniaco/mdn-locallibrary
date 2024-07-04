@@ -10,6 +10,7 @@ const book_instance_controller = require("../controllers/bookinstanceController"
 /// BOOK ROUTES ///
 
 // GET catalog home page.
+// maps to `/catalog/` because we import the route with a `/catalog` prefix
 router.get("/", book_controller.index);
 
 // GET request for creating a Book. NOTE This must come before routes that display Book (uses id).
