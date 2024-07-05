@@ -28,6 +28,10 @@ const app = express();
 // specify the folder where the templates will be stored
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
+// ejs doesnt support code 
+const expressLayouts = require('express-ejs-layouts');
+app.use(expressLayouts);
+app.set('layout', 'layout'); // Default layout file
 
 app.use(logger('dev'));
 app.use(express.json());
