@@ -48,7 +48,6 @@ exports.genre_create_get = (req, res, next) => {
   res.render("genre_form", { title: "Create Genre" , genre:{}, errors: {}});
 };
 
-
 // Handle Genre create on POST.
 // Array of middlewares
 exports.genre_create_post = [
@@ -94,7 +93,8 @@ exports.genre_delete_get = asyncHandler(async (req, res, next) => {
   // get all Books in parallel
   const [genre, genre_books] = await Promise.all([
     Genre.findById(req.params.id).exec(),
-    Book.find({genre: req.params.id}).exec(),
+    Book.find({genre: req.params.id}).exec(), // dont confuse this id with const genre
+    // this one is model's field.
   ])
 
   // no result
