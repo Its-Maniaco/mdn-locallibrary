@@ -119,10 +119,72 @@ exports.bookinstance_delete_post = asyncHandler(async (req, res, next) => {
 
 // Display BookInstance update form on GET.
 exports.bookinstance_update_get = asyncHandler(async (req, res, next) => {
-  res.send("NOT IMPLEMENTED: BookInstance update GET");
+  // get book, allBooks for form
+  const [bookInstance, allBooks] = await Promise.all([
+    BookInstance.findById(req.params.id).populate("book").exec(), // instance to update
+    // Book can be upodated to anything so call all
+    Book.find().exec(),
+  ]);
+
+  if (bookInstance === null) {
+    const err = new Error("Book instance not found");
+    err.status = 404;
+    return next(err);
+  }
+
+  res.render("bookinstance_form", {
+    title: "Instance Update",
+    book_list: allBooks,
+    bookinstance: bookInstance,
+    selected_book: bookInstance.book._id, // id of the book which we are updating
+    errors: {},
+  });
 });
 
 // Handle bookinstance update on POST.
-exports.bookinstance_update_post = asyncHandler(async (req, res, next) => {
-  res.send("NOT IMPLEMENTED: BookInstance update POST");
-});
+exports.bookinstance_update_post = [
+  // Validate and sanitize fields.
+  body("book","Book not specified.").trim().isLength({min: 1}).escape(),
+  body("imprint", "Imprint must not be empty.")
+    .trim()
+    .isLength({ min: 1})
+    .escape(),
+  body("stauts").escape(),
+  body("due_back", "Invalid Date")
+    .optional({values: "falsy"}) // if value of field is falsy, validation is not applied
+    .isISO8601()
+    .toDate(),
+
+    // process request after valdiation and sanitization
+    asyncHandler(async (req, res, next) => {
+      const errors = validationResult(req);
+
+      // create instance
+      const bookInstance = new BookInstance({
+        book: req.body.book,
+        imprint: req.body.imprint,
+        status: req.body.status,
+        due_back: req.body.due_back,
+        _id: req.params.id,
+      });
+
+      if (!errors.isEmpty()) {
+         // There are errors. Render form again with sanitized values/error messages.
+         // we only get allbooks to repopulate form i.e only the necessary data.
+         const allBooks = await Book.find({}, "title").exec();
+
+         res.render("bookinstance_form", {
+          title: "Instance Update",
+          book_list: allBooks,
+          selected_book: bookInstance.book._id,
+          bookinstance: bookInstance,
+          errors: errors.array(),
+        });
+        return;
+      } else {
+        await BookInstance.findByIdAndUpdate(req.params.id, bookInstance, {});
+        res.redirect(bookInstance.url);
+      }
+    }),
+];
+  
