@@ -146,10 +146,73 @@ exports.author_delete_post = asyncHandler(async (req, res, next) => {
 
 // Display Author update form on GET.
 exports.author_update_get = asyncHandler(async (req, res, next) => {
-  res.send("NOT IMPLEMENTED: Author update GET");
+  const author = await Author.findById(req.params.id);
+
+  if (author === null) {
+    // No results.
+    const err = new Error("Book not found");
+    err.status = 404;
+    return next(err);
+  }
+  res.render("author_form", {
+    title: "Update Author",
+    author: author,
+    first_name: author.first_name,
+    family_name: author.family_name,
+    date_of_birth: author.date_of_birth,
+    date_of_death: author.date_of_death,
+    errors: {}
+  });
 });
 
 // Handle Author update on POST.
-exports.author_update_post = asyncHandler(async (req, res, next) => {
-  res.send("NOT IMPLEMENTED: Author update POST");
-});
+exports.author_update_post = [
+  // Validate and sanitize fields.
+  body("first_name", "First Name must not be empty")
+    .trim()
+    .isLength({min: 1})
+    .escape(),
+  body("family_name", "Family Name must not be empty")
+    .trim()
+    .isLength({min: 1})
+    .escape(),
+  body("date_of_birth", "Invalid Date")
+    .optional({values: "falsy"})
+    .isISO8601()
+    .toDate(),
+  body("date_of_death", "Invalid Date")
+    .optional({values: "falsy"})
+    .isISO8601()
+    .toDate(),
+  
+  // process request after valdiation and sanitization
+  asyncHandler(async (req, res, next) => {
+    const errors = validationResult(req);
+    
+    //create author object with validated result
+    const author = new Author({
+      first_name: req.body.first_name,
+      family_name: req.body.family_name,
+      date_of_birth: req.body.date_of_birth,
+      date_of_death: req.body.date_of_death,
+      _id: req.params.id // This is required, or a new ID will be assigned!
+    });
+
+    if (!errors.isEmpty()) {
+      // if there are errors, rerender again
+      res.render("author_form", {
+        title: "Update Author",
+        author: author,
+        first_name: author.first_name,
+        family_name: author.family_name,
+        date_of_birth: author.date_of_birth,
+        date_of_death: author.date_of_death,
+        errors: {}
+      });
+      return ;
+    } else {
+      await Author.findByIdAndUpdate(req.params.id, author, {});
+      res.redirect(author.url);
+    }
+  }),
+]
