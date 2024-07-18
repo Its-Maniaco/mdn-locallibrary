@@ -221,6 +221,14 @@ exports.book_update_get = asyncHandler(async (req, res, next) => {
   });
 });
 
+/* 
+  In delete, both get and post need to check existance of book and instances
+    therefore, we re-fetch in post as we did in get
+  In update, we need to display update form with current set data, that is why
+    we fetch data, but
+    in update_post, our form will have all the data needed.
+*/
+
 // Handle book update on POST.
 exports.book_update_post = [
   // Convert the genre to an array.
@@ -246,7 +254,7 @@ exports.book_update_post = [
     .isLength({ min: 1 })
     .escape(),
   body("isbn", "ISBN must not be empty").trim().isLength({ min: 1 }).escape(),
-  body("genre.*").escape(),
+  body("genre.*").escape(), // (*) in the sanitizer to validate each of the genre array entries.
 
   // Process request after validation and sanitization.
   asyncHandler(async (req, res, next) => {
