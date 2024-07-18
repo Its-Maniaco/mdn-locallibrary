@@ -8,7 +8,7 @@
   <button class="btn btn-primary" type="submit">Submit</button>
 </form>
 
-<% if (errors) { %>
+<% if (errors && errors.length > 0) { %>
   <ul>
     <% errors.forEach(function(error) { %>
       <li><%= error.msg %></li>
